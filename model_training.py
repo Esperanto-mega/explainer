@@ -137,7 +137,7 @@ for epoch in range(args.epochs):
 
 # Evaluate
 eval_model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
-eval_model.load_state_dict(args.model_path)
+eval_model.load_state_dict(torch.load(args.model_path))
 eval_model = eval_model.to(device)
 eval_model.eval()
 eval_total_correct = []
