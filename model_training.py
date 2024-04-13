@@ -61,10 +61,13 @@ class GCN(torch.nn.Module):
         # (20, num_classes)
         self.linear = torch.nn.Linear(hidden_channels, out_channels)
 
+        self.weight_init_(mode = 'xaiver')
+
     def forward(self, data):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
         x, edge_index, batch = data.x, data.edge_index, data.batch
+        
         x = self.conv1(x, edge_index).relu()
         # (num_features -> 20)
         x = self.conv2(x, edge_index).relu()
@@ -77,6 +80,16 @@ class GCN(torch.nn.Module):
         # (20 -> num_classes)
         
         return x
+        
+    def weight_init_(self, mode = 'kaiming'):
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                if mode == 'kaiming':
+                    nn.init.kaiming_normal_(module.weight)
+                elif mode == 'xavier':
+                    nn.init.xavier_normal_(module.weight)
+                else:
+                    nn.init.normal_(module.weight)
 
 model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
 model = model.to(device)
@@ -103,6 +116,9 @@ for epoch in range(args.epochs):
         loss = loss_fn(output, label)
         loss.backward()
         optimizer.step()
+
+        # for k, v in model.named_parameters():
+        #     print(v.grad)
         
         prediction = torch.argmax(output, dim = 1)
         # prediction.shape: (batchsize)
