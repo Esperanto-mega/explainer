@@ -52,20 +52,23 @@ class GCN(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super().__init__()
         self.conv1 = GCNConv(in_channels, hidden_channels)
-        self.conv2 = GCNConv(hidden_channels, out_channels)
+        self.conv2 = GCNConv(hidden_channels, hidden_channels)
+        self.conv3 = GCNConv(hidden_channels, out_channels)
 
     def forward(self, data):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
         x, edge_index, batch = data.x, data.edge_index, data.batch
-        x = self.conv1(x, edge_index).relu()
-        x = self.conv2(x, edge_index)
+        x = self.conv1(x, edge_index).sigmoid()
+        x = self.conv2(x, edge_index).sigmoid()
+        x = self.conv3(x, edge_index)
         x = global_mean_pool(x, batch)
         return x
 
 model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
 model = model.to(device)
 model.train()
+print(model)
 
 optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
 loss_fn = torch.nn.CrossEntropyLoss()
