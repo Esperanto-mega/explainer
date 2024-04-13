@@ -1,5 +1,6 @@
 # yinjun@2024/04/13
 
+import random
 import argparse
 import numpy as np
 from tqdm import tqdm
@@ -36,9 +37,11 @@ dataset.num_features: 10
 dataset.num_classes: 2
 '''
 # Dataloader
+index = list(range(len(dataset)))
+random.shuffle(index)
 train_num = round(0.8 * len(dataset))
 valid_num = round(0.9 * len(dataset))
-trainset, validset, testset = dataset[:train_num], dataset[train_num:valid_num], dataset[valid_num:]
+trainset, validset, testset = dataset[index[:train_num]], dataset[index[train_num:valid_num]], dataset[index[valid_num:]]
 trainloader = DataLoader(trainset, batch_size = args.batch_size, shuffle = True)
 validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = True)
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
@@ -54,12 +57,10 @@ class GCN(torch.nn.Module):
     def forward(self, data):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
-        
         x, edge_index, batch = data.x, data.edge_index, data.batch
         x = self.conv1(x, edge_index).relu()
+        x = self.conv2(x, edge_index)
         x = global_mean_pool(x, batch)
-        x = self.conv2(x, edge_index).sigmoid()
-        print('x.shape:', x.shape)
         return x
 
 model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
@@ -67,7 +68,9 @@ model = model.to(device)
 model.train()
 
 optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
-loss_fn = torch.nn.BCELoss()
+loss_fn = torch.nn.CrossEntropyLoss()
+# The input is expected to contain the unnormalized logits for each class 
+# (which do not need to be positive or sum to 1, in general).
 
 best_accuracy = 0.0
 # Train
@@ -83,11 +86,12 @@ for epoch in range(args.epochs):
         # label.dim: (batchsize)
         loss = loss_fn(output, label)
         loss.backward()
+        optimizer.step()
         
         prediction = torch.argmax(output, dim = 1)
         # prediction.shape: (batchsize)
         correct = prediction == label
-        total_correct.append(correct.detach().cpu().numpy().tolist())
+        total_correct.extend(correct.detach().cpu().numpy().tolist())
     accuracy = np.sum(total_correct) / len(trainset)
     print('Epoch', epoch + 1, 'Accuracy:', accuracy)
 
@@ -99,11 +103,11 @@ for epoch in range(args.epochs):
                 data = data.to(device)
                 output = model(data)
                 label = data.y
-                val_loss = loss_fn(output, data.y)
+                val_loss = loss_fn(output, label)
 
                 prediction = torch.argmax(output, dim = 1)
                 val_correct = prediction == label
-                val_total_correct.append(val_correct.detach().cpu().numpy().tolist())
+                val_total_correct.extend(val_correct.detach().cpu().numpy().tolist())
             val_accuracy = np.sum(val_total_correct) / len(validset)
             print('Epoch', epoch + 1, 'Validation Accuracy:', val_accuracy)
 
@@ -122,6 +126,6 @@ for data in tqdm(testloader):
     label = data.y
     prediction = torch.argmax(output, dim = 1)
     eval_correct = prediction == label
-    eval_total_correct.append(eval_correct.detach().cpu().numpy().tolist())
+    eval_total_correct.extend(eval_correct.detach().cpu().numpy().tolist())
 eval_accuracy = np.sum(eval_total_correct) / len(testset)
 print('Epoch', epoch + 1, 'Evaluation Accuracy:', eval_accuracy)
