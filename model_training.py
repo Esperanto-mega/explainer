@@ -13,7 +13,7 @@ from torch_geometric.loader.dataloader import DataLoader
 
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
-parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
+# parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
 parser.add_argument("--data_path", type = str, default = '', help = "Root directory where the dataset should be saved")
 parser.add_argument("--batch_size", type = int, default = 64, help = "")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
@@ -84,6 +84,7 @@ for epoch in range(args.epochs):
         correct = prediction == label
         total_correct.append(correct.detach().cpu().numpy().tolist())
     accuracy = np.sum(total_correct) / len(trainset)
+    print('Epoch', epoch + 1, 'Accuracy:', accuracy)
 
     # Validation
     if (epoch + 1) % args.eval_step == 0:
@@ -99,6 +100,7 @@ for epoch in range(args.epochs):
                 val_correct = prediction == label
                 val_total_correct.append(val_correct.detach().cpu().numpy().tolist())
             val_accuracy = np.sum(val_total_correct) / len(validset)
+            print('Epoch', epoch + 1, 'Validation Accuracy:', val_accuracy)
 
             if val_accuracy > best_accuracy:
                 torch.save(model.state_dict(), args.model_path)
@@ -117,3 +119,4 @@ for data in tqdm(testloader):
     eval_correct = prediction == label
     eval_total_correct.append(eval_correct.detach().cpu().numpy().tolist())
 eval_accuracy = np.sum(eval_total_correct) / len(testset)
+print('Epoch', epoch + 1, 'Evaluation Accuracy:', eval_accuracy)
