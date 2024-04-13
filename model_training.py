@@ -6,6 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 import torch
+import torch.nn as nn
 from torch import Tensor
 
 from torch_geometric.nn import GCNConv
@@ -61,8 +62,6 @@ class GCN(torch.nn.Module):
         # (20, num_classes)
         self.linear = torch.nn.Linear(hidden_channels, out_channels)
 
-        self.weight_init_(mode = 'xaiver')
-
     def forward(self, data):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
@@ -81,16 +80,6 @@ class GCN(torch.nn.Module):
         
         return x
         
-    def weight_init_(self, mode = 'kaiming'):
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                if mode == 'kaiming':
-                    nn.init.kaiming_normal_(module.weight)
-                elif mode == 'xavier':
-                    nn.init.xavier_normal_(module.weight)
-                else:
-                    nn.init.normal_(module.weight)
-
 model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
 model = model.to(device)
 model.train()
