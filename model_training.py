@@ -17,14 +17,15 @@ from torch_geometric.nn.pool import global_mean_pool, global_max_pool
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 # parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
 parser.add_argument("--data_path", type = str, default = '', help = "Root directory where the dataset should be saved")
-parser.add_argument("--batch_size", type = int, default = 64, help = "")
+parser.add_argument("--batch_size", type = int, default = 128, help = "")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Root directory where the trained model should be saved")
-parser.add_argument("--hidden_dim", type = int, default = 32, help = "")
+parser.add_argument("--hidden_dim", type = int, default = 20, help = "")
 parser.add_argument("--lr", type = float, default = 1e-3, help = "")
 parser.add_argument("--epochs", type = int, default = 30, help = "")
 parser.add_argument("--eval_step", type = int, default = 5, help = "")
 args = parser.parse_args()
+print(args)
 
 device = torch.device(args.device)
 
@@ -64,11 +65,16 @@ class GCN(torch.nn.Module):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
         x, edge_index, batch = data.x, data.edge_index, data.batch
-        x = self.conv1(x, edge_index).relu() # (num_features -> 20)
-        x = self.conv2(x, edge_index).relu() # (20 -> 20)
-        x = self.conv3(x, edge_index).relu() # (20 -> 20)
-        x = global_max_pool(x, batch)        # (node -> graph)
-        x = self.linear(x)                   # (20 -> num_classes)
+        x = self.conv1(x, edge_index).relu()
+        # (num_features -> 20)
+        x = self.conv2(x, edge_index).relu()
+        # (20 -> 20)
+        x = self.conv3(x, edge_index).relu()
+        # (20 -> 20)
+        x = global_max_pool(x, batch)
+        # (node -> graph)
+        x = self.linear(x)
+        # (20 -> num_classes)
         
         return x
 
