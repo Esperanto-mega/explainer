@@ -10,6 +10,7 @@ from torch import Tensor
 from torch_geometric.nn import GCNConv
 from torch_geometric.datasets import BA2MotifDataset
 from torch_geometric.loader.dataloader import DataLoader
+from torch_geometric.nn.pool import global_mean_pool
 
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
@@ -35,11 +36,11 @@ dataset.num_features: 10
 dataset.num_classes: 2
 '''
 # Dataloader
-train_num = 0.8 * len(dataset)
-valid_num = 0.9 * len(dataset)
+train_num = round(0.8 * len(dataset))
+valid_num = round(0.9 * len(dataset))
 trainset, validset, testset = dataset[:train_num], dataset[train_num:valid_num], dataset[valid_num:]
-trainloader = DataLoader(trainset, batch_size = args.batchsize, shuffle = True)
-validloader = DataLoader(validset, batch_size = args.batchsize, shuffle = True)
+trainloader = DataLoader(trainset, batch_size = args.batch_size, shuffle = True)
+validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = True)
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 
 # GNN model
@@ -50,11 +51,15 @@ class GCN(torch.nn.Module):
         self.conv1 = GCNConv(in_channels, hidden_channels)
         self.conv2 = GCNConv(hidden_channels, out_channels)
 
-    def forward(self, x: Tensor, edge_index: Tensor) -> Tensor:
+    def forward(self, data):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
+        
+        x, edge_index, batch = data.x, data.edge_index, data.batch
         x = self.conv1(x, edge_index).relu()
-        x = self.conv2(x, edge_index)
+        x = global_mean_pool(x, batch)
+        x = self.conv2(x, edge_index).sigmoid()
+        print('x.shape:', x.shape)
         return x
 
 model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
