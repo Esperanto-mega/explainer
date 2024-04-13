@@ -11,7 +11,7 @@ from torch import Tensor
 from torch_geometric.nn import GCNConv
 from torch_geometric.datasets import BA2MotifDataset
 from torch_geometric.loader.dataloader import DataLoader
-from torch_geometric.nn.pool import global_mean_pool
+from torch_geometric.nn.pool import global_mean_pool, global_max_pool
 
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
@@ -51,18 +51,25 @@ testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 class GCN(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super().__init__()
+        # (num_features, 20)
         self.conv1 = GCNConv(in_channels, hidden_channels)
+        # (20, 20)
         self.conv2 = GCNConv(hidden_channels, hidden_channels)
-        self.conv3 = GCNConv(hidden_channels, out_channels)
+        # (20, 20)
+        self.conv3 = GCNConv(hidden_channels, hidden_channels)
+        # (20, num_classes)
+        self.linear = torch.nn.Linear(hidden_channels, out_channels)
 
     def forward(self, data):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
         x, edge_index, batch = data.x, data.edge_index, data.batch
-        x = self.conv1(x, edge_index).sigmoid()
-        x = self.conv2(x, edge_index).sigmoid()
-        x = self.conv3(x, edge_index)
-        x = global_mean_pool(x, batch)
+        x = self.conv1(x, edge_index).relu() # (num_features -> 20)
+        x = self.conv2(x, edge_index).relu() # (20 -> 20)
+        x = self.conv3(x, edge_index).relu() # (20 -> 20)
+        x = global_max_pool(x, batch)        # (node -> graph)
+        x = self.linear(x)                   # (20 -> num_classes)
+        
         return x
 
 model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
