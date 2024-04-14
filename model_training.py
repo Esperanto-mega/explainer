@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 
+import wandb
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -30,6 +31,10 @@ parser.add_argument("--eval_step", type = int, default = 50, help = "")
 args = parser.parse_args()
 print(args)
 
+# wandb
+# wandb.init(config = args, reinit = True)
+
+# GPU
 device = torch.device(args.device)
 
 # Dataset
@@ -51,7 +56,7 @@ validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = True)
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 
 # GCN Model    
-model = GCN(dataset.num_features, args.hidden_dim dataset.num_classes)
+model = GraphGCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
 model = model.to(device)
 print(model)
 
@@ -64,7 +69,7 @@ best_accuracy = 0.0
 # Train
 for epoch in range(args.epochs):
     model.train()
-    total_correct = []
+    correct = 0
     for data in tqdm(trainloader):
         optimizer.zero_grad()
         data = data.to(device)
@@ -76,19 +81,22 @@ for epoch in range(args.epochs):
         loss = loss_fn(output, label)
         loss.backward()
         optimizer.step()
+
+        # wandb.log({'Loss': loss})
         
         prediction = torch.argmax(output, dim = 1)
         # prediction.shape: (batchsize)
-        correct = prediction == label
-        total_correct.extend(correct.detach().cpu().numpy().tolist())
-    accuracy = np.sum(total_correct) / len(trainset)
+        correct += (prediction == label).sum()
+    accuracy = correct / len(trainset)
     print('Epoch', epoch + 1, 'Accuracy:', accuracy)
-
+    
+    # wandb.log({'Accuracy': accuracy})
+    
     # Validation
     if (epoch + 1) % args.eval_step == 0:
         model.eval()
         with torch.no_grad():
-            val_total_correct = []
+            val_correct = 0
             for data in tqdm(validloader):
                 data = data.to(device)
                 output = model(data)
@@ -96,26 +104,24 @@ for epoch in range(args.epochs):
                 val_loss = loss_fn(output, label)
 
                 prediction = torch.argmax(output, dim = 1)
-                val_correct = prediction == label
-                val_total_correct.extend(val_correct.detach().cpu().numpy().tolist())
-            val_accuracy = np.sum(val_total_correct) / len(validset)
+                val_correct += (prediction == label).sum()
+            val_accuracy = val_correct / len(validset)
             print('Epoch', epoch + 1, 'Validation Accuracy:', val_accuracy)
 
             if val_accuracy > best_accuracy:
                 torch.save(model.state_dict(), args.model_path)
 
 # Evaluate
-eval_model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
+eval_model = GraphGCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
 eval_model.load_state_dict(torch.load(args.model_path))
 eval_model = eval_model.to(device)
 eval_model.eval()
-eval_total_correct = []
+eval_correct = 0
 for data in tqdm(testloader):
     data = data.to(device)
     output = model(data)
     label = data.y
     prediction = torch.argmax(output, dim = 1)
-    eval_correct = prediction == label
-    eval_total_correct.extend(eval_correct.detach().cpu().numpy().tolist())
-eval_accuracy = np.sum(eval_total_correct) / len(testset)
+    eval_correct += (prediction == label).sum()
+eval_accuracy = eval_correct / len(testset)
 print('Epoch', epoch + 1, 'Evaluation Accuracy:', eval_accuracy)
