@@ -1,5 +1,6 @@
 # yinjun@2024/04/13
 
+import random
 import argparse
 from tqdm import tqdm
 
@@ -27,7 +28,7 @@ parser.add_argument("--eval_step", type = int, default = 5, help = "Explainer va
 parser.add_argument("--lr", type = float, default = 5e-3, help = "Explainer learning rate")
 parser.add_argument("--batch_size", type = int, default = 64, help = "Explainer training batchsize")
 
-parser.add_argument("--explanation_type", type = str, default = 'model')
+parser.add_argument("--explanation_type", type = str, default = 'phenomenon')
 # 'model': Explain the model prediction.
 # 'phenomenon': Explain the phenomenon that the model is trying to predict.
 
@@ -53,10 +54,12 @@ parser.add_argument("--model_return_type", type = str, default = 'raw')
 # "log_probs": The model returns log-probabilities.
 
 args = parser.parse_args()
+print(args)
 
 device = torch.device(args.device)
 
 # Dataset
+dataset = BA2MotifDataset(args.data_path)
 index = list(range(len(dataset)))
 random.shuffle(index)
 train_num = round(0.8 * len(dataset))
@@ -91,14 +94,15 @@ explainer = explainer.to(device)
 
 # Explainer training
 for epoch in range(args.epochs):
-    for batch in tqdm(trainloader):
-        batch = batch.to(device)
+    for data in tqdm(trainloader):
+        data = data.to(device)
         target = explained_model(batch)
         explain_loss = explainer.algorithm.train(
             epoch = epoch,
             model = explained_model,
-            x = batch.x
-            edge_index = batch.edge_index,
+            x = data.x,
+            edge_index = data.edge_index,
+            batch = data.batch,
             target = target
         )
         explanation = explainer(batch.x, batch.edge_index)
