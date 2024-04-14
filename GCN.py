@@ -22,6 +22,7 @@ class GraphGCN(torch.nn.Module):
     def forward(self, x, edge_index, batch = None, edge_weights = None):
         if batch is None: # No batch given
             batch = torch.zeros(x.size(0), dtype = torch.long)
+        batch = batch.to(x.device)
         embed = self.embedding(x, edge_index, edge_weights)
 
         out1 = global_max_pool(embed, batch)
@@ -34,6 +35,7 @@ class GraphGCN(torch.nn.Module):
     def embedding(self, x, edge_index, edge_weights = None):
         if edge_weights is None:
             edge_weights = torch.ones(edge_index.size(1))
+        edge_weights = edge_weights.to(x.device)
         stack = []
 
         out1 = self.conv1(x, edge_index, edge_weights)
@@ -53,6 +55,7 @@ class GraphGCN(torch.nn.Module):
         input_lin = out3
 
         return input_lin
+
 # GNN model
 # Define a simple GCN.
 class GCN(torch.nn.Module):
