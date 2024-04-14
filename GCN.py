@@ -4,7 +4,7 @@ from torch_geometric.nn import GCNConv, global_max_pool, global_mean_pool
 
 # GNN model
 # Define a simple GCN.
-class GCN(torch.nn.Module):
+class GraphGCN(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super().__init__()
         # (num_features, 20)
@@ -14,7 +14,7 @@ class GCN(torch.nn.Module):
         # (20, 20)
         self.conv3 = GCNConv(hidden_channels, hidden_channels)
         # (20 * 2, num_classes)
-        self.linear = torch.nn.Linear(hidden_channels * 2, out_channels)
+        self.linear = torch.nn.Linear(hidden_channels, out_channels)
 
     def forward(self, data):
         # x: Node feature matrix of shape [num_nodes, in_channels]
@@ -33,10 +33,11 @@ class GCN(torch.nn.Module):
         x = torch.nn.functional.normalize(x, p = 2, dim = 1)
         x = x.relu()
         # (20 -> 20)
-        x_mean = global_mean_pool(x, batch)
-        x_max = global_max_pool(x, batch)
+        # x_mean = global_mean_pool(x, batch)
+        # x_max = global_max_pool(x, batch)
         # (node -> graph)
-        x = torch.cat([x_mean, x_max], dim = -1)
+        # x = torch.cat([x_mean, x_max], dim = -1)
+        x = global_mean_pool(x, batch)
         x = self.linear(x)
         # (20 * 2 -> num_classes)
         
