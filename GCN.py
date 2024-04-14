@@ -18,10 +18,10 @@ class GraphGCN(torch.nn.Module):
         # (20 * 2, num_classes)
         self.linear = torch.nn.Linear(hidden_channels * 2, out_channels)
 
-    def forward(self, data):
+    def forward(self, x, edge_index, batch):
         # x: Node feature matrix of shape [num_nodes, in_channels]
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
-        x, edge_index, batch = data.x, data.edge_index, data.batch
+        # x, edge_index, batch = data.x, data.edge_index, data.batch
         
         x = self.conv1(x, edge_index)
         x = torch.nn.functional.normalize(x, p = 2, dim = 1)
