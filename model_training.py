@@ -14,6 +14,8 @@ from torch_geometric.datasets import BA2MotifDataset
 from torch_geometric.loader.dataloader import DataLoader
 from torch_geometric.nn.pool import global_mean_pool, global_max_pool
 
+from GCN import GraphGCN
+
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 # parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
@@ -48,49 +50,9 @@ trainloader = DataLoader(trainset, batch_size = args.batch_size, shuffle = True)
 validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = True)
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 
-# GNN model
-# Define a simple GCN.
-class GCN(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels):
-        super().__init__()
-        # (num_features, 20)
-        self.conv1 = GCNConv(in_channels, hidden_channels)
-        # (20, 20)
-        self.conv2 = GCNConv(hidden_channels, hidden_channels)
-        # (20, 20)
-        self.conv3 = GCNConv(hidden_channels, hidden_channels)
-        # (20 * 2, num_classes)
-        self.linear = torch.nn.Linear(hidden_channels * 2, out_channels)
-
-    def forward(self, data):
-        # x: Node feature matrix of shape [num_nodes, in_channels]
-        # edge_index: Graph connectivity matrix of shape [2, num_edges]
-        x, edge_index, batch = data.x, data.edge_index, data.batch
-        
-        x = self.conv1(x, edge_index)
-        x = torch.nn.functional.normalize(x, p = 2, dim = 1)
-        x = x.relu()
-        # (num_features -> 20)
-        x = self.conv2(x, edge_index)
-        x = torch.nn.functional.normalize(x, p = 2, dim = 1)
-        x = x.relu()
-        # (20 -> 20)
-        x = self.conv3(x, edge_index)
-        x = torch.nn.functional.normalize(x, p = 2, dim = 1)
-        x = x.relu()
-        # (20 -> 20)
-        x_mean = global_mean_pool(x, batch)
-        x_max = global_max_pool(x, batch)
-        # (node -> graph)
-        x = torch.cat([x_mean, x_max], dim = -1)
-        x = self.linear(x)
-        # (20 * 2 -> num_classes)
-        
-        return x
-        
-model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
+# GCN Model    
+model = GraphGCN(dataset.num_features, dataset.num_classes)
 model = model.to(device)
-model.train()
 print(model)
 
 optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
@@ -101,21 +63,19 @@ loss_fn = torch.nn.CrossEntropyLoss()
 best_accuracy = 0.0
 # Train
 for epoch in range(args.epochs):
+    model.train()
     total_correct = []
     for data in tqdm(trainloader):
+        optimizer.zero_grad()
         data = data.to(device)
         # data.shape: (num_nodes, num_features)
-        optimizer.zero_grad()
-        output = model(data)
+        output = model(data.x, data.edge_index, data.batch)
         # output.shape: (batchsize, num_classes)
         label = data.y
         # label.dim: (batchsize)
         loss = loss_fn(output, label)
         loss.backward()
         optimizer.step()
-
-        # for k, v in model.named_parameters():
-        #     print(v.grad)
         
         prediction = torch.argmax(output, dim = 1)
         # prediction.shape: (batchsize)
@@ -126,11 +86,12 @@ for epoch in range(args.epochs):
 
     # Validation
     if (epoch + 1) % args.eval_step == 0:
+        model.eval()
         with torch.no_grad():
             val_total_correct = []
             for data in tqdm(validloader):
                 data = data.to(device)
-                output = model(data)
+                output = model(data.x, data.edge_index, data.batch)
                 label = data.y
                 val_loss = loss_fn(output, label)
 
@@ -151,7 +112,7 @@ eval_model.eval()
 eval_total_correct = []
 for data in tqdm(testloader):
     data = data.to(device)
-    output = model(data)
+    output = model(data.x, data.edge_index, data.batch)
     label = data.y
     prediction = torch.argmax(output, dim = 1)
     eval_correct = prediction == label
