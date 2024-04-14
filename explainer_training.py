@@ -85,18 +85,17 @@ model_config = {
 }
 explainer = Explainer(
     model = explained_model,
-    algorithm = PGExplainer(epochs = args.epochs, lr = args.lr),
+    algorithm = PGExplainer(epochs = args.epochs, lr = args.lr).to(device),
     explanation_type = args.explanation_type,
     edge_mask_type = args.edge_mask_type,
     model_config = model_config
 )
-explainer = explainer.to(device)
 
 # Explainer training
 for epoch in range(args.epochs):
     for data in tqdm(trainloader):
         data = data.to(device)
-        target = explained_model(batch)
+        target = explained_model(data.x, data.edge_index, data.batch)
         explain_loss = explainer.algorithm.train(
             epoch = epoch,
             model = explained_model,
@@ -108,3 +107,6 @@ for epoch in range(args.epochs):
         explanation = explainer(batch.x, batch.edge_index)
         fidelity = fidelity(explainer, explanation)
         print('fidelity:', fidelity)
+#explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
+#fidelity = fidelity(explainer, explanation)
+#print('epoch',epoch+1,'fidelity:', fidelity)
