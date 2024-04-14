@@ -8,9 +8,11 @@ import torch
 from torch_geometric.nn import GCNConv
 from torch_geometric.datasets import BA2MotifDataset
 from torch_geometric.explain import Explainer, PGExplainer
+from torch_geometric.explain.metric import fidelity
 from torch_geometric.loader.dataloader import DataLoader
 
-from model_training import GCN
+
+from GCN import GraphGCN
 
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
@@ -24,22 +26,27 @@ parser.add_argument("--epochs", type = int, default = 30, help = "Explainer trai
 parser.add_argument("--eval_step", type = int, default = 5, help = "Explainer validation steps")
 parser.add_argument("--lr", type = float, default = 5e-3, help = "Explainer learning rate")
 parser.add_argument("--batch_size", type = int, default = 64, help = "Explainer training batchsize")
+
 parser.add_argument("--explanation_type", type = str, default = 'model')
 # 'model': Explain the model prediction.
 # 'phenomenon': Explain the phenomenon that the model is trying to predict.
+
 parser.add_argument("--edge_mask_type", type = str, default = 'object')
 # None: Will not apply any mask on nodes.
 # 'object': Will mask each edge.
 # "common_attributes": Will mask each edge feature.
 # "attributes": Will mask each feature across all edges.
+
 parser.add_argument("--model_mode", type = str, default = 'binary_classification')
 # "binary_classification": A binary classification model.
 # "multiclass_classification": A multiclass classification model.
 # "regression": A regression model.
+
 parser.add_argument("--model_task_level", type = str, default = 'graph')
 # "node": A node-level prediction model.
 # "edge": An edge-level prediction model.
 # "graph": A graph-level prediction model.
+
 parser.add_argument("--model_return_type", type = str, default = 'raw')
 # "raw": The model returns raw values.
 # "probs": The model returns probabilities.
@@ -50,19 +57,18 @@ args = parser.parse_args()
 device = torch.device(args.device)
 
 # Dataset
-dataset = BA2MotifDataset(args.data_path)
-train_num = args.train_ratio * len(dataset)
-valid_num = args.valid_num * len(dataset)
-trainset = dataset[:train_num]
-validset = dataset[train_num:train_num + valid_num]
-testset = dataset[train_num + valid_num:]
+index = list(range(len(dataset)))
+random.shuffle(index)
+train_num = round(0.8 * len(dataset))
+valid_num = round(0.9 * len(dataset))
+trainset, validset, testset = dataset[index[:train_num]], dataset[index[train_num:valid_num]], dataset[index[valid_num:]]
 trainloader = DataLoader(trainset, batch_size = args.batch_size, shuffle = True)
 validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = True)
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 
 # GNN model to be explained
-explained_model = GCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
-explained_model.load_state_dict(args.model_path)
+explained_model = GraphGCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
+explained_model.load_state_dict(torch.load(args.model_path))
 explained_model.to(device)
 explained_model.eval()
 
@@ -93,4 +99,5 @@ for epoch in range(args.epochs):
             edge_index = batch.edge_index,
             target = target
         )
-        
+        explanation = explainer(batch.x, batch.edge_index)
+        fidelity = fidelity(explainer, explanation)
