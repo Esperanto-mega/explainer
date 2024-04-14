@@ -109,11 +109,19 @@ for epoch in range(args.epochs):
             print('Epoch', epoch + 1, 'Validation Accuracy:', val_accuracy.item())
 
             if val_accuracy > best_accuracy:
-                torch.save(model.state_dict(), args.model_path)
+                state = {
+                    'args': args,
+                    'epoch': epoch + 1
+                    'best_accuracy': val_accuracy.item(),
+                    'state_dict': model.state_dict()
+                }
+                torch.save(state, args.model_path)
 
 # Evaluate
-eval_model = GraphGCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
-eval_model.load_state_dict(torch.load(args.model_path))
+ckpt = torch.load(args.model_path)
+model_args, model_state_dict = ckpt['args'], ckpt['state_dict']
+eval_model = GraphGCN(dataset.num_features, model_args.hidden_dim, dataset.num_classes)
+eval_model.load_state_dict(model_state_dict)
 eval_model = eval_model.to(device)
 eval_model.eval()
 eval_correct = 0
