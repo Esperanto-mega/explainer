@@ -67,8 +67,10 @@ validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = True)
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 
 # GNN model to be explained
-explained_model = GraphGCN(dataset.num_features, args.hidden_dim, dataset.num_classes)
-explained_model.load_state_dict(torch.load(args.model_path))
+ckpt = torch.load(args.model_path)
+model_args, model_state_dict = ckpt['args'], ckpt['state_dict']
+explained_model = GraphGCN(dataset.num_features, model_args.hidden_dim, dataset.num_classes)
+explained_model.load_state_dict(model_state_dict)
 explained_model.to(device)
 explained_model.eval()
 
@@ -101,3 +103,4 @@ for epoch in range(args.epochs):
         )
         explanation = explainer(batch.x, batch.edge_index)
         fidelity = fidelity(explainer, explanation)
+        print('fidelity:', fidelity)
