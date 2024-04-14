@@ -21,7 +21,7 @@ from GCN import GraphGCN
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 # parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
 parser.add_argument("--data_path", type = str, default = '', help = "Root directory where the dataset should be saved")
-parser.add_argument("--batch_size", type = int, default = 128, help = "")
+parser.add_argument("--batch_size", type = int, default = 256, help = "")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Root directory where the trained model should be saved")
 parser.add_argument("--hidden_dim", type = int, default = 20, help = "")
@@ -88,7 +88,7 @@ for epoch in range(args.epochs):
         # prediction.shape: (batchsize)
         correct += (prediction == label).sum()
     accuracy = correct / len(trainset)
-    print('Epoch', epoch + 1, 'Accuracy:', accuracy)
+    print('Epoch', epoch + 1, 'Accuracy:', accuracy.item())
     
     # wandb.log({'Accuracy': accuracy})
     
@@ -106,7 +106,7 @@ for epoch in range(args.epochs):
                 prediction = torch.argmax(output, dim = 1)
                 val_correct += (prediction == label).sum()
             val_accuracy = val_correct / len(validset)
-            print('Epoch', epoch + 1, 'Validation Accuracy:', val_accuracy)
+            print('Epoch', epoch + 1, 'Validation Accuracy:', val_accuracy.item())
 
             if val_accuracy > best_accuracy:
                 torch.save(model.state_dict(), args.model_path)
@@ -124,4 +124,4 @@ for data in tqdm(testloader):
     prediction = torch.argmax(output, dim = 1)
     eval_correct += (prediction == label).sum()
 eval_accuracy = eval_correct / len(testset)
-print('Epoch', epoch + 1, 'Evaluation Accuracy:', eval_accuracy)
+print('Epoch', epoch + 1, 'Evaluation Accuracy:', eval_accuracy.item())
