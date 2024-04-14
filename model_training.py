@@ -25,8 +25,8 @@ parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Root directory where the trained model should be saved")
 parser.add_argument("--hidden_dim", type = int, default = 20, help = "")
 parser.add_argument("--lr", type = float, default = 1e-3, help = "")
-parser.add_argument("--epochs", type = int, default = 30, help = "")
-parser.add_argument("--eval_step", type = int, default = 5, help = "")
+parser.add_argument("--epochs", type = int, default = 1000, help = "")
+parser.add_argument("--eval_step", type = int, default = 50, help = "")
 args = parser.parse_args()
 print(args)
 
@@ -51,7 +51,7 @@ validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = True)
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 
 # GCN Model    
-model = GraphGCN(dataset.num_features, dataset.num_classes)
+model = GCN(dataset.num_features, args.hidden_dim dataset.num_classes)
 model = model.to(device)
 print(model)
 
@@ -69,7 +69,7 @@ for epoch in range(args.epochs):
         optimizer.zero_grad()
         data = data.to(device)
         # data.shape: (num_nodes, num_features)
-        output = model(data.x, data.edge_index, data.batch)
+        output = model(data)
         # output.shape: (batchsize, num_classes)
         label = data.y
         # label.dim: (batchsize)
@@ -91,7 +91,7 @@ for epoch in range(args.epochs):
             val_total_correct = []
             for data in tqdm(validloader):
                 data = data.to(device)
-                output = model(data.x, data.edge_index, data.batch)
+                output = model(data)
                 label = data.y
                 val_loss = loss_fn(output, label)
 
@@ -112,7 +112,7 @@ eval_model.eval()
 eval_total_correct = []
 for data in tqdm(testloader):
     data = data.to(device)
-    output = model(data.x, data.edge_index, data.batch)
+    output = model(data)
     label = data.y
     prediction = torch.argmax(output, dim = 1)
     eval_correct = prediction == label
