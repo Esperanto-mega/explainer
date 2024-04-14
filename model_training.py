@@ -111,7 +111,7 @@ for epoch in range(args.epochs):
             if val_accuracy > best_accuracy:
                 state = {
                     'args': args,
-                    'epoch': epoch + 1
+                    'epoch': epoch + 1,
                     'best_accuracy': val_accuracy.item(),
                     'state_dict': model.state_dict()
                 }
