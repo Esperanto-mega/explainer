@@ -74,7 +74,7 @@ for epoch in range(args.epochs):
         optimizer.zero_grad()
         data = data.to(device)
         # data.shape: (num_nodes, num_features)
-        output = model(data)
+        output = model(data.x, data.edge_index, data.batch)
         # output.shape: (batchsize, num_classes)
         label = data.y
         # label.dim: (batchsize)
@@ -99,7 +99,7 @@ for epoch in range(args.epochs):
             val_correct = 0
             for data in tqdm(validloader):
                 data = data.to(device)
-                output = model(data)
+                output = model(data.x, data.edge_index, data.batch)
                 label = data.y
                 val_loss = loss_fn(output, label)
 
@@ -127,7 +127,7 @@ eval_model.eval()
 eval_correct = 0
 for data in tqdm(testloader):
     data = data.to(device)
-    output = model(data)
+    output = model(data.x, data.edge_index, data.batch)
     label = data.y
     prediction = torch.argmax(output, dim = 1)
     eval_correct += (prediction == label).sum()
