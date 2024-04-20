@@ -21,7 +21,7 @@ from GCN import GraphGCN
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 # parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
 parser.add_argument("--data_path", type = str, default = '', help = "Root directory where the dataset should be saved")
-parser.add_argument("--batch_size", type = int, default = 256, help = "")
+parser.add_argument("--batch_size", type = int, default = 128, help = "")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Root directory where the trained model should be saved")
 parser.add_argument("--hidden_dim", type = int, default = 20, help = "")
