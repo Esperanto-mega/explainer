@@ -1,3 +1,5 @@
+# Install PyG
+pip install torch_geometric
 # Clone Repo
 git clone https://github.com/Esperanto-mega/explainer.git
 # Train GCN
