@@ -1,4 +1,4 @@
-# yinjun@2024/04/13
+# @yinjun
 
 import random
 import argparse
