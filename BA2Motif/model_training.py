@@ -109,6 +109,7 @@ for epoch in range(args.epochs):
             print('Epoch', epoch + 1, 'Validation Accuracy:', val_accuracy.item())
 
             if val_accuracy > best_accuracy:
+                best_accuracy = val_accuracy
                 state = {
                     'args': args,
                     'epoch': epoch + 1,
