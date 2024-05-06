@@ -20,11 +20,12 @@ parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
 parser.add_argument("--data_path", type = str, default = '', help = "Root directory where the dataset should be saved")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Model to be explained")
-parser.add_argument("--train_ratio", type = float, default = 0.9, help = "")
+parser.add_argument("--train_ratio", type = float, default = 0.8, help = "")
 parser.add_argument("--epochs", type = int, default = 30, help = "Explainer training epochs")
 parser.add_argument("--eval_step", type = int, default = 5, help = "Explainer validation steps")
 parser.add_argument("--lr", type = float, default = 5e-3, help = "Explainer learning rate")
 parser.add_argument("--batch_size", type = int, default = 64, help = "Explainer training batchsize")
+parser.add_argument("--repeat", type = int, default = 10, help = "Times to repeat")
 
 parser.add_argument("--explanation_type", type = str, default = 'phenomenon')
 # 'model': Explain the model prediction.
@@ -106,23 +107,33 @@ for epoch in range(args.epochs):
     print('epoch', epoch + 1,'loss:', total_loss)
 
 # Explainer evaluating
-unfaithful_list = []
-fid_pos_list = []
-fid_neg_list = []
-for data in tqdm(testloader):
-    data = data.to(device)
-    target = explained_model(data.x, data.edge_index, data.batch)
-    explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
-    fid = fidelity(explainer, explanation)
-    unfaithful = unfaithfulness(explainer, explanation)
-    fid_pos_list.append(fid[0])
-    fid_neg_list.append(fid[1])
-    unfaithful_list.append(unfaithful)
+all_result = {
+  'fid_pos': [],
+  'fid_neg': [],
+  'unfaith': []
+}
+for i in range(args.repeat):
+    unfaithful_list = []
+    fid_pos_list = []
+    fid_neg_list = []
+    for data in tqdm(testloader):
+        data = data.to(device)
+        target = explained_model(data.x, data.edge_index, data.batch)
+        explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
+        fid = fidelity(explainer, explanation)
+        unfaithful = unfaithfulness(explainer, explanation)
+        fid_pos_list.append(fid[0])
+        fid_neg_list.append(fid[1])
+        unfaithful_list.append(unfaithful)
+        
+    fid_pos = np.mean(fid_pos_list)
+    fid_neg = np.mean(fid_neg_list)
+    unfaithful = np.mean(unfaithful_list)
+    all_result['fid_pos'].append(fid_pos)
+    all_result['fid_neg'].append(fid_neg)
+    all_result['unfaith'].append(unfaith)
     
-
-fid_pos = np.mean(fid_pos_list)
-fid_neg = np.mean(fid_neg_list)
-unfaithful = np.mean(unfaithful_list)
-print('fid_pos:', fid_pos)
-print('fid_neg:', fid_neg)
-print('unfaithfulness:', unfaithful)
+print('result:', all_result)
+print('fid_pos:', np.mean(all_result['fid_pos']), '±', np.std(all_result['fid_pos']))
+print('fid_neg:', np.mean(all_result['fid_neg']), '±', np.std(all_result['fid_neg']))
+print('unfaithfulness:', np.mean(all_result['unfaith']), '±', np.std(all_result['unfaith']))
