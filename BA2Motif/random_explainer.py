@@ -29,6 +29,32 @@ parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Model to be explained")
 parser.add_argument("--split_ratio", type = float, default = 0.8, help = "")
 parser.add_argument("--repeat", type = int, default = 10, help = "Times to repeat")
+
+parser.add_argument("--explanation_type", type = str, default = 'phenomenon')
+# 'model': Explain the model prediction.
+# 'phenomenon': Explain the phenomenon that the model is trying to predict.
+
+parser.add_argument("--edge_mask_type", type = str, default = 'object')
+# None: Will not apply any mask on nodes.
+# 'object': Will mask each edge.
+# "common_attributes": Will mask each edge feature.
+# "attributes": Will mask each feature across all edges.
+
+parser.add_argument("--model_mode", type = str, default = 'binary_classification')
+# "binary_classification": A binary classification model.
+# "multiclass_classification": A multiclass classification model.
+# "regression": A regression model.
+
+parser.add_argument("--model_task_level", type = str, default = 'graph')
+# "node": A node-level prediction model.
+# "edge": An edge-level prediction model.
+# "graph": A graph-level prediction model.
+
+parser.add_argument("--model_return_type", type = str, default = 'raw')
+# "raw": The model returns raw values.
+# "probs": The model returns probabilities.
+# "log_probs": The model returns log-probabilities.
+
 args = parser.parse_args()
 print(args)
 
@@ -52,7 +78,13 @@ explained_model.to(device)
 explained_model.eval()
 
 # Explainer
-explainer = DummyExplainer()
+explainer = Explainer(
+    model = explained_model,
+    algorithm = DummyExplainer(),
+    explanation_type = args.explanation_type,
+    edge_mask_type = args.edge_mask_type,
+    model_config = model_config
+)
 
 all_result = {
   'fid_pos': [],
