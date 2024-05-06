@@ -30,7 +30,7 @@ parser.add_argument("--model_path", type = str, default = '', help = "Model to b
 parser.add_argument("--split_ratio", type = float, default = 0.8, help = "")
 parser.add_argument("--repeat", type = int, default = 10, help = "Times to repeat")
 
-parser.add_argument("--explanation_type", type = str, default = 'phenomenon')
+parser.add_argument("--explanation_type", type = str, default = 'model')
 # 'model': Explain the model prediction.
 # 'phenomenon': Explain the phenomenon that the model is trying to predict.
 
