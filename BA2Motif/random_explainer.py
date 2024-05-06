@@ -52,10 +52,12 @@ explained_model.to(device)
 explained_model.eval()
 
 # Explainer
+explainer = DummyExplainer()
+
 all_result = {
   'fid_pos': [],
   'fid_neg': [],
-  'unfaith:' []
+  'unfaith': []
 }
 for i in range(args.repeat):
     unfaithful_list = []
@@ -64,9 +66,9 @@ for i in range(args.repeat):
     for data in tqdm(testloader):
         data = data.to(device)
         target = explained_model(data.x, data.edge_index, data.batch)
-        explanation = DummyExplainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
-        fid = fidelity(DummyExplainer, explanation)
-        unfaithful = unfaithfulness(DummyExplainer, explanation)
+        explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
+        fid = fidelity(explainer, explanation)
+        unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
         fid_neg_list.append(fid[1])
         unfaithful_list.append(unfaithful)
