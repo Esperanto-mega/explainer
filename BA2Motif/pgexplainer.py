@@ -138,7 +138,7 @@ for i in range(args.repeat):
         
     fid_pos = np.mean(fid_pos_list)
     fid_neg = np.mean(fid_neg_list)
-    unfaithful = np.mean(unfaithful_list)
+    unfaith = np.mean(unfaithful_list)
     all_result['fid_pos'].append(fid_pos)
     all_result['fid_neg'].append(fid_neg)
     all_result['unfaith'].append(unfaith)
