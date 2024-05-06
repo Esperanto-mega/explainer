@@ -78,6 +78,11 @@ explained_model.to(device)
 explained_model.eval()
 
 # Explainer
+model_config = {
+    'mode': args.model_mode,
+    'task_level': args.model_task_level,
+    'return_type': args.model_return_type
+}
 explainer = Explainer(
     model = explained_model,
     algorithm = DummyExplainer(),
