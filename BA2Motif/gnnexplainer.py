@@ -72,9 +72,11 @@ dataset = BA2MotifDataset(args.data_path)
 index = list(range(len(dataset)))
 random.shuffle(index)
 train_num = round(args.train_ratio * len(dataset))
-trainset, testset = dataset[index[:train_num]], dataset[index[train_num:]]
-trainloader = DataLoader(trainset, batch_size = args.batch_size, shuffle = True)
+testset = dataset[index[train_num:]]
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
+
+positive = [data.y == 1 for data in testset]
+print('positive rate:', sum(positive) / len(testset))
 
 # GNN model to be explained
 ckpt = torch.load(args.model_path)
