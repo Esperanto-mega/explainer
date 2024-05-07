@@ -69,6 +69,9 @@ train_num = round(args.split_ratio * len(dataset))
 testset = dataset[index[train_num:]]
 testloader = DataLoader(testset, batch_size = 1, shuffle = False)
 
+positive = [data.y == 1 for data in testset]
+print('positive rate:', sum(positive) / len(testset))
+
 # GNN model to be explained
 ckpt = torch.load(args.model_path)
 model_args, model_state_dict = ckpt['args'], ckpt['state_dict']
