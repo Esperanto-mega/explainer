@@ -77,6 +77,16 @@ explained_model.load_state_dict(model_state_dict)
 explained_model.to(device)
 explained_model.eval()
 
+eval_correct = 0
+for data in tqdm(testloader):
+    data = data.to(device)
+    output = explained_model(data.x, data.edge_index, data.batch)
+    label = data.y
+    prediction = torch.argmax(output, dim = 1)
+    eval_correct += (prediction == label).sum()
+eval_accuracy = eval_correct / len(testset)
+print('Evaluation Accuracy:', eval_accuracy.item())
+
 # Explainer
 model_config = {
     'mode': args.model_mode,
@@ -102,8 +112,8 @@ for i in range(args.repeat):
     fid_neg_list = []
     for data in tqdm(testloader):
         data = data.to(device)
-        target = explained_model(data.x, data.edge_index, data.batch)
-        explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
+        # target = explained_model(data.x, data.edge_index, data.batch)
+        explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
