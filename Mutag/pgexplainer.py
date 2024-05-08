@@ -54,7 +54,7 @@ parser.add_argument("--model_task_level", type = str, default = 'graph')
 # "edge": An edge-level prediction model.
 # "graph": A graph-level prediction model.
 
-parser.add_argument("--model_return_type", type = str, default = 'probs')
+parser.add_argument("--model_return_type", type = str, default = 'raw')
 # "raw": The model returns raw values.
 # "probs": The model returns probabilities.
 # "log_probs": The model returns log-probabilities.
@@ -119,7 +119,7 @@ for epoch in range(args.epochs):
             model = explained_model,
             x = data.x,
             edge_index = data.edge_index,
-            edge_attr = data.edge_attr
+            edge_attr = data.edge_attr,
             batch = data.batch,
             target = target
         )
@@ -153,6 +153,10 @@ for i in range(args.repeat):
     all_result['fid_pos'].append(fid_pos)
     all_result['fid_neg'].append(fid_neg)
     all_result['unfaith'].append(unfaith)
+    
+    print('fid_pos:',fid_pos)
+    print('fid_neg:',fid_neg)
+    print('unfaith:',unfaith)
     
 print('result:', all_result)
 print('fid_pos:', np.mean(all_result['fid_pos']), '±', np.std(all_result['fid_pos']))
