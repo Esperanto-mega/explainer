@@ -20,7 +20,7 @@ class MutagNet(torch.nn.Module):
         self.relus = ModuleList()
 
         for i in range(conv_unit):
-            conv = GINEConv( nn = Sequential(Linear(32, 75), self.relu_nn[i], Linear(75, 32)))
+            conv = GINEConv(nn = Sequential(Linear(32, 75), self.relu_nn[i], Linear(75, 32)))
             self.convs.append(conv)
             self.batch_norms.append(BatchNorm(32))
             self.relus.append(ReLU())
