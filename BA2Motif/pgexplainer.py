@@ -23,6 +23,9 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.enabled = False
 
+def min_max_norm(x):
+    return (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
@@ -143,6 +146,7 @@ for i in range(args.repeat):
         data = data.to(device)
         target = explained_model(data.x, data.edge_index, data.batch)
         explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
+        explanation.edge_mask = min_max_norm(explanation.edge_mask)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
