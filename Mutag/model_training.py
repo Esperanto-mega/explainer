@@ -78,7 +78,7 @@ for epoch in range(args.epoch):
                 all_val_loss += loss_fn(pred, data.y) * data.num_graphs
                 all_val_acc += float(pred.argmax(dim = 1).eq(data.y).sum().item())
             val_acc = all_val_acc / len(val_loader.dataset)
-            print('Epoch', epoch + 1, 'validation loss:', all_val_loss / len(val_loader.dataset), 
+            print('Epoch', epoch + 1, 'validation loss:', all_val_loss.item() / len(val_loader.dataset), 
                   '; validation accuracy:', val_acc)
 
             if val_acc > best_acc:
@@ -86,7 +86,7 @@ for epoch in range(args.epoch):
                 state = {
                     'args': args,
                     'epoch': epoch + 1,
-                    'best_accuracy': val_acc.item(),
+                    'best_accuracy': val_acc,
                     'state_dict': model.state_dict()
                 }
                 torch.save(state, args.model_path)
