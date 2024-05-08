@@ -87,7 +87,7 @@ explained_model.eval()
 eval_correct = 0
 for data in tqdm(test_loader):
     data = data.to(device)
-    output = explained_model(data.x, data.edge_index, data.batch)
+    output = explained_model(data.x, data.edge_index, data.edge_attr, data.batch)
     label = data.y
     prediction = torch.argmax(output, dim = 1)
     eval_correct += (prediction == label).sum()
@@ -113,12 +113,13 @@ for epoch in range(args.epochs):
     total_loss = 0
     for data in tqdm(train_loader):
         data = data.to(device)
-        target = explained_model(data.x, data.edge_index, data.batch)
+        target = explained_model(data.x, data.edge_index, data.edge_attr, data.batch)
         explain_loss = explainer.algorithm.train(
             epoch = epoch,
             model = explained_model,
             x = data.x,
             edge_index = data.edge_index,
+            edge_attr = data.edge_attr
             batch = data.batch,
             target = target
         )
@@ -138,8 +139,8 @@ for i in range(args.repeat):
     fid_neg_list = []
     for data in tqdm(test_loader):
         data = data.to(device)
-        target = explained_model(data.x, data.edge_index, data.batch)
-        explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
+        target = explained_model(data.x, data.edge_index, data.edge_attr, data.batch)
+        explanation = explainer(x = data.x, edge_index = data.edge_index, data.edge_attr, batch = data.batch, target = target)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
