@@ -23,6 +23,9 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.enabled = False
 
+def min_max_norm(x):
+    return (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
@@ -122,6 +125,7 @@ for i in range(args.repeat):
     for data in tqdm(testloader):
         data = data.to(device)
         explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch)
+        explanation.edge_mask = min_max_norm(explanation.edge_mask)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
@@ -135,9 +139,9 @@ for i in range(args.repeat):
     all_result['fid_neg'].append(fid_neg)
     all_result['unfaith'].append(unfaith)
 
-    print('fid_pos:',fid_pos)
-    print('fid_neg:',fid_neg)
-    print('unfaith:',unfaith)
+    print('fid_pos:', fid_pos)
+    print('fid_neg:', fid_neg)
+    print('unfaith:', unfaith)
     
 print('result:', all_result)
 print('fid_pos:', np.mean(all_result['fid_pos']), '±', np.std(all_result['fid_pos']))
