@@ -28,7 +28,6 @@ parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
 parser.add_argument("--data_path", type = str, default = '', help = "Root directory where the dataset should be saved")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Model to be explained")
-parser.add_argument("--train_ratio", type = float, default = 0.8, help = "")
 parser.add_argument("--epochs", type = int, default = 30, help = "Explainer training epochs")
 parser.add_argument("--eval_step", type = int, default = 5, help = "Explainer validation steps")
 parser.add_argument("--lr", type = float, default = 5e-3, help = "Explainer learning rate")
@@ -74,8 +73,8 @@ train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle =
 val_loader = DataLoader(val_dataset, batch_size = args.batch_size, shuffle = False)
 test_loader = DataLoader(test_dataset, batch_size = 1, shuffle = False)
 
-positive = [data.y == 1 for data in testset]
-print('positive rate:', sum(positive) / len(testset))
+positive = [data.y == 1 for data in test_dataset]
+print('positive rate:', sum(positive) / len(test_dataset))
 
 # GNN model to be explained
 ckpt = torch.load(args.model_path)
@@ -86,13 +85,13 @@ explained_model.to(device)
 explained_model.eval()
 
 eval_correct = 0
-for data in tqdm(testloader):
+for data in tqdm(test_loader):
     data = data.to(device)
     output = explained_model(data.x, data.edge_index, data.batch)
     label = data.y
     prediction = torch.argmax(output, dim = 1)
     eval_correct += (prediction == label).sum()
-eval_accuracy = eval_correct / len(testset)
+eval_accuracy = eval_correct / len(test_loader.dataset)
 print('Evaluation Accuracy:', eval_accuracy.item())
 
 # Explainer
@@ -112,7 +111,7 @@ explainer = Explainer(
 # Explainer training
 for epoch in range(args.epochs):
     total_loss = 0
-    for data in tqdm(trainloader):
+    for data in tqdm(train_loader):
         data = data.to(device)
         target = explained_model(data.x, data.edge_index, data.batch)
         explain_loss = explainer.algorithm.train(
@@ -124,7 +123,7 @@ for epoch in range(args.epochs):
             target = target
         )
         total_loss += explain_loss
-    total_loss /= train_num
+    total_loss /= len(train_loader.dataset)
     print('epoch', epoch + 1,'loss:', total_loss)
 
 # Explainer evaluating
@@ -137,7 +136,7 @@ for i in range(args.repeat):
     unfaithful_list = []
     fid_pos_list = []
     fid_neg_list = []
-    for data in tqdm(testloader):
+    for data in tqdm(test_loader):
         data = data.to(device)
         target = explained_model(data.x, data.edge_index, data.batch)
         explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
