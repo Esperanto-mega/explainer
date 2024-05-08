@@ -23,7 +23,7 @@ def set_seed(seed):
     torch.backends.cudnn.enabled = False
 
 def min_max_norm(x):
-    return (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+    return (x - torch.min(x)) / (torch.max(x) - torch.min(x) + 1e-8)
 
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
@@ -143,7 +143,7 @@ for i in range(args.repeat):
     for data in tqdm(test_loader):
         data = data.to(device)
         target = explained_model(data.x, data.edge_index, data.edge_attr, data.batch)
-        explanation = explainer(x = data.x, edge_index = data.edge_index, data.edge_attr, batch = data.batch, target = target)
+        explanation = explainer(x = data.x, edge_index = data.edge_index, edge_attr = data.edge_attr, batch = data.batch, target = target)
         explanation.edge_mask = min_max_norm(explanation.edge_mask)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
