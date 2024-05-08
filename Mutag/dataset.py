@@ -8,6 +8,7 @@ import sklearn.preprocessing as preprocessing
 from torch_geometric.data import InMemoryDataset, download_url, extract_zip, Data
 
 class Mutagenicity(InMemoryDataset):
+    # desperated
     url = ('https://ls11-www.cs.tu-dortmund.de/people/morris/graphkerneldatasets/Mutagenicity.zip')
     splits = ['training', 'evaluation', 'testing']
 
