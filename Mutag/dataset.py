@@ -13,6 +13,7 @@ class Mutagenicity(InMemoryDataset):
 
     def __init__(self, root, mode='testing', transform=None, pre_transform=None, pre_filter=None):
         assert mode in self.splits
+        self.data_path = root
         self.mode = mode
         super(Mutagenicity, self).__init__(root, transform, pre_transform, pre_filter)
 
@@ -21,7 +22,7 @@ class Mutagenicity(InMemoryDataset):
 
     @property
     def raw_file_names(self):
-        return ['Mutagenicity/' + i \
+        return [i \
                 for i in [
                     'Mutagenicity_A.txt',
                     'Mutagenicity_edge_labels.txt',
@@ -36,7 +37,7 @@ class Mutagenicity(InMemoryDataset):
         return ['training.pt', 'evaluation.pt', 'testing.pt']
 
     def download(self):
-        if os.path.exists(osp.join(self.raw_dir, 'Mutagenicity')):
+        if os.path.exists(self.data_path):
             print('Using existing data in folder Mutagenicity')
             return
 
