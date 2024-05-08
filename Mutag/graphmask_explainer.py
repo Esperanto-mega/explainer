@@ -68,11 +68,11 @@ device = torch.device(args.device)
 set_seed(args.seed)
 
 # Dataset
-train_dataset = Mutagenicity(args.data_path, mode = 'training')
-val_dataset = Mutagenicity(args.data_path, mode = 'evaluation')
+# train_dataset = Mutagenicity(args.data_path, mode = 'training')
+# val_dataset = Mutagenicity(args.data_path, mode = 'evaluation')
 test_dataset = Mutagenicity(args.data_path, mode = 'testing')
-train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle = True)
-val_loader = DataLoader(val_dataset, batch_size = args.batch_size, shuffle = False)
+# train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle = True)
+# val_loader = DataLoader(val_dataset, batch_size = args.batch_size, shuffle = False)
 test_loader = DataLoader(test_dataset, batch_size = 1, shuffle = False)
 
 positive = [data.y == 1 for data in test_dataset]
@@ -120,10 +120,10 @@ for i in range(args.repeat):
     unfaithful_list = []
     fid_pos_list = []
     fid_neg_list = []
-    for data in tqdm(testloader):
+    for data in tqdm(test_loader):
         data = data.to(device)
         explanation = explainer(x = data.x, edge_index = data.edge_index, edge_attr = data.edge_attr, batch = data.batch)
-        explanation.edge_mask = min_max_norm(explanation.edge_mask)
+        #explanation.edge_mask = min_max_norm(explanation.edge_mask)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
