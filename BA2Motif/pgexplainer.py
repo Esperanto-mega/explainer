@@ -8,7 +8,9 @@ import numpy as np
 import torch
 from torch_geometric.nn import GCNConv
 from torch_geometric.datasets import BA2MotifDataset
-from torch_geometric.explain import Explainer, PGExplainer
+from torch_geometric.explain import Explainer
+# from torch_geometric.explain import PGExplainer
+from Algorithm.PGExplainer import PGExplainer
 from torch_geometric.explain.metric import fidelity, unfaithfulness
 from torch_geometric.loader.dataloader import DataLoader
 
@@ -146,7 +148,7 @@ for i in range(args.repeat):
         data = data.to(device)
         target = explained_model(data.x, data.edge_index, data.batch)
         explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch, target = target)
-        explanation.edge_mask = min_max_norm(explanation.edge_mask)
+        # explanation.edge_mask = min_max_norm(explanation.edge_mask)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
