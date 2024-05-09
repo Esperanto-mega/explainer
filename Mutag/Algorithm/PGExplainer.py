@@ -105,7 +105,7 @@ class PGExplainer(ExplainerAlgorithm):
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight) 
+                nn.init.xavier_normal_(m.weight) 
     
     def reset_parameters(self):
         r"""Resets all learnable parameters of the module."""
@@ -117,6 +117,7 @@ class PGExplainer(ExplainerAlgorithm):
         model: torch.nn.Module,
         x: Tensor,
         edge_index: Tensor,
+        edge_attr: Tensor,
         *,
         target: Tensor,
         index: Optional[Union[int, Tensor]] = None,
@@ -176,7 +177,7 @@ class PGExplainer(ExplainerAlgorithm):
                                                      num_nodes=x.size(0))
             edge_mask = edge_mask[hard_edge_mask]
 
-        y_hat, y = model(x, edge_index, **kwargs), target
+        y_hat, y = model(x, edge_index, edge_attr, **kwargs), target
 
         if index is not None:
             y_hat, y = y_hat[index], y[index]
@@ -196,6 +197,7 @@ class PGExplainer(ExplainerAlgorithm):
         model: torch.nn.Module,
         x: Tensor,
         edge_index: Tensor,
+        edge_attr: Tensor,
         *,
         target: Tensor,
         index: Optional[Union[int, Tensor]] = None,
