@@ -6,7 +6,9 @@ from tqdm import tqdm
 import numpy as np
 
 import torch
-from torch_geometric.explain import Explainer, PGExplainer
+from torch_geometric.explain import Explainer
+# from torch_geometric.explain import PGExplainer
+from Algorithm.PGExplainer import PGExplainer
 from torch_geometric.explain.metric import fidelity, unfaithfulness
 from torch_geometric.loader.dataloader import DataLoader
 
