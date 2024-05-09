@@ -61,11 +61,11 @@ device = torch.device(args.device)
 set_seed(args.seed)
 
 # Dataset
-train_dataset = Mutagenicity(args.data_path, mode = 'training')
-val_dataset = Mutagenicity(args.data_path, mode = 'evaluation')
+# train_dataset = Mutagenicity(args.data_path, mode = 'training')
+# val_dataset = Mutagenicity(args.data_path, mode = 'evaluation')
 test_dataset = Mutagenicity(args.data_path, mode = 'testing')
-train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle = True)
-val_loader = DataLoader(val_dataset, batch_size = args.batch_size, shuffle = False)
+# train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle = True)
+# val_loader = DataLoader(val_dataset, batch_size = args.batch_size, shuffle = False)
 test_loader = DataLoader(test_dataset, batch_size = 1, shuffle = False)
 
 positive = [data.y == 1 for data in test_dataset]
