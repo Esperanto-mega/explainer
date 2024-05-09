@@ -161,6 +161,10 @@ for i in range(args.repeat):
     all_result['fid_pos'].append(fid_pos)
     all_result['fid_neg'].append(fid_neg)
     all_result['unfaith'].append(unfaith)
+
+    print('fid_pos:',fid_pos)
+    print('fid_neg:',fid_neg)
+    print('unfaith:',unfaith)
     
 print('result:', all_result)
 print('fid_pos:', np.mean(all_result['fid_pos']), '±', np.std(all_result['fid_pos']))
