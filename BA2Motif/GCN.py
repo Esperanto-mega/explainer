@@ -43,3 +43,25 @@ class GraphGCN(torch.nn.Module):
         # (20 * 2 -> num_classes)
         
         return x
+
+    def get_node_representation(self, x, edge_index, batch):
+        x = self.conv1(x, edge_index)
+        x = torch.nn.functional.normalize(x, p = 2, dim = 1)
+        x = x.relu()
+        
+        x = self.conv2(x, edge_index)
+        x = torch.nn.functional.normalize(x, p = 2, dim = 1)
+        x = x.relu()
+        
+        x = self.conv3(x, edge_index)
+        x = torch.nn.functional.normalize(x, p = 2, dim = 1)
+        x = x.relu()
+
+        return x
+
+    def get_graph_representation(self, x, edge_index, batch):
+        x = self.get_node_representation(x, edge_index, batch)
+        x_mean = global_mean_pool(x, batch)
+        x_max = global_max_pool(x, batch)
+        x = torch.cat([x_mean, x_max], dim = -1)
+        return x
