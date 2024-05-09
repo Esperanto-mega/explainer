@@ -2,7 +2,9 @@ import logging
 from typing import Optional, Union
 
 import torch
+import torch.nn as nn
 from torch import Tensor
+from torch.nn import functional as F
 from torch.nn import ReLU, Sequential
 from torch.nn import ModuleList
 
@@ -79,7 +81,7 @@ class PGExplainer(ExplainerAlgorithm):
             self.node_bns.append(BatchNorm(64))
 
         self.mlp = Sequential(
-            Linear(-1, 64),
+            Linear(128, 64),
             ReLU(),
             Linear(64, 1),
         )
@@ -93,10 +95,16 @@ class PGExplainer(ExplainerAlgorithm):
         self.optimizer = torch.optim.Adam(params_dict)
         self._curr_epoch = -1
 
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight) 
+    
     def reset_parameters(self):
         r"""Resets all learnable parameters of the module."""
         reset(self.mlp)
-
 
     def train(
         self,
@@ -141,7 +149,7 @@ class PGExplainer(ExplainerAlgorithm):
 
         # z = get_embeddings(model, x, edge_index, **kwargs)[-1]
         z = F.relu(self.node_linear(x))
-        for conv, bn in zip(self.node_convs. self.node_bns):
+        for conv, bn in zip(self.node_convs, self.node_bns):
             z = F.relu(conv(z, edge_index))
             z = bn(z)
 
@@ -151,7 +159,6 @@ class PGExplainer(ExplainerAlgorithm):
         inputs = self._get_inputs(z, edge_index, index)
         logits = self.mlp(inputs).view(-1)
         edge_mask = self._concrete_sample(logits, temperature)
-        edge_mask = edge_mask.sigmoid()
         set_masks(model, edge_mask, edge_index, apply_sigmoid=True)
 
         if self.model_config.task_level == ModelTaskLevel.node:
@@ -210,7 +217,11 @@ class PGExplainer(ExplainerAlgorithm):
             _, hard_edge_mask = self._get_hard_masks(model, index, edge_index,
                                                      num_nodes=x.size(0))
 
-        z = get_embeddings(model, x, edge_index, **kwargs)[-1]
+        # z = get_embeddings(model, x, edge_index, **kwargs)[-1]
+        z = F.relu(self.node_linear(x))
+        for conv, bn in zip(self.node_convs, self.node_bns):
+            z = F.relu(conv(z, edge_index))
+            z = bn(z)
 
         inputs = self._get_inputs(z, edge_index, index)
         logits = self.mlp(inputs).view(-1)
