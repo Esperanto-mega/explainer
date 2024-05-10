@@ -20,7 +20,7 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.enabled = False
 
-def topk_threshold(x, ratio = 0.4):
+def topk_threshold(x, ratio = 0.3):
     topk = round(ratio * x.shape[0])
     threshold = torch.topk(x, topk).values[-1]
     return (x > threshold).float()
