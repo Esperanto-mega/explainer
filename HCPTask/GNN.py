@@ -20,13 +20,14 @@ def fix_seed(seed):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-class ResidualGNNs(torch.nn.Module):
-    def __init__(self, args, train_dataset, hidden_channels = 32, hidden = 64, num_layers = 3, k = 0.6):
+class ResidualGNN(torch.nn.Module):
+    def __init__(self,, num_features, num_classes, hidden_channels = 32, hidden = 64, num_layers = 3, k = 0.6):
         super().__init__()
         self.convs = ModuleList()
         self.aggr = aggr.MeanAggregation()
         self.hidden_channels = hidden_channels
-        num_features = train_dataset.num_features
+        self.num_features = num_features
+        self.num_classes = num_classes
 
         if num_layers>0:
             self.convs.append(GCNConv(num_features, hidden_channels))
@@ -61,7 +62,7 @@ class ResidualGNNs(torch.nn.Module):
             nn.BatchNorm1d(hidden // 2),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear((hidden // 2), args.num_classes),
+            nn.Linear((hidden // 2), num_classes),
         )
 
     def forward(self, data):
@@ -83,4 +84,5 @@ class ResidualGNNs(torch.nn.Module):
         h = self.bnh(h)
         x = torch.cat((x,h), dim = 1)
         x = self.mlp(x)
-        return log_softmax(x)
+        return x
+        # return log_softmax(x)
