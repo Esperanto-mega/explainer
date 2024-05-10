@@ -22,6 +22,11 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.enabled = False
 
+def topk_threshold(x, ratio = 0.3):
+    topk = round(ratio * x.shape[0])
+    threshold = torch.topk(x, topk).values[-1]
+    return (x > threshold).float()
+
 def min_max_norm(x):
     return (x - torch.min(x)) / (torch.max(x) - torch.min(x) + 1e-8)
 
@@ -123,7 +128,7 @@ for i in range(args.repeat):
     for data in tqdm(test_loader):
         data = data.to(device)
         explanation = explainer(x = data.x, edge_index = data.edge_index, edge_attr = data.edge_attr, batch = data.batch)
-        #explanation.edge_mask = min_max_norm(explanation.edge_mask)
+        explanation.edge_mask = topk_threshold(explanation.edge_mask)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
