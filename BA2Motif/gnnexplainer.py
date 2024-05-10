@@ -23,6 +23,11 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.enabled = False
 
+def topk_threshold(x, ratio = 0.4):
+    topk = round(ratio * x.shape[0])
+    threshold = torch.topk(x, topk).values[-1]
+    return (x > threshold).float()
+
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
@@ -124,6 +129,7 @@ for i in range(args.repeat):
         data = data.to(device)
         # target = explained_model(data.x, data.edge_index, data.batch)
         explanation = explainer(x = data.x, edge_index = data.edge_index, batch = data.batch)
+        explanation.edge_mask = topk_threshold(explanation.edge_mask)
         fid = fidelity(explainer, explanation)
         unfaithful = unfaithfulness(explainer, explanation)
         fid_pos_list.append(fid[0])
@@ -136,6 +142,9 @@ for i in range(args.repeat):
     all_result['fid_pos'].append(fid_pos)
     all_result['fid_neg'].append(fid_neg)
     all_result['unfaith'].append(unfaith)
+    print('fid_pos:',fid_pos)
+    print('fid_neg:',fid_neg)
+    print('unfaith:',unfaith)
     
 print('result:', all_result)
 print('fid_pos:', np.mean(all_result['fid_pos']), '±', np.std(all_result['fid_pos']))
