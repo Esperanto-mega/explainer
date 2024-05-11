@@ -19,8 +19,8 @@ from GNN import fix_seed
 # Command arguments
 parser = argparse.ArgumentParser(description = 'PGExplainer')
 parser.add_argument("--seed", type = int, default = 42, help = "Random seed")
-parser.add_argument("--data_path", type = str, default = '', help = "Root directory where the dataset should be saved")
-parser.add_argument("--data_name", type = str, default = 'HPCTask', help = "Dataset name")
+parser.add_argument("--data_path", type = str, default = '/datain/v-yinju/GNN-Explainer/Data', help = "Root directory where the dataset should be saved")
+parser.add_argument("--data_name", type = str, default = 'HCPTask', help = "Dataset name")
 parser.add_argument("--batch_size", type = int, default = 16, help = "")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--train_ratio", type = float, default = 0.7, help = "")
@@ -32,7 +32,6 @@ parser.add_argument("--num_layers", type = int, default = 3, help = "")
 parser.add_argument("--lr", type = float, default = 1e-5, help = "")
 parser.add_argument('--weight_decay', type = float, default = 0.0005)
 parser.add_argument("--epochs", type = int, default = 100, help = "")
-parser.add_argument("--eval_step", type = int, default = 50, help = "")
 args = parser.parse_args()
 print(args)
 
