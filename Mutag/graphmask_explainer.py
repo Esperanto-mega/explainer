@@ -7,9 +7,10 @@ import numpy as np
 
 import torch
 from torch_geometric.explain import Explainer, GraphMaskExplainer
-from torch_geometric.explain.metric import fidelity, unfaithfulness
+from torch_geometric.explain.metric import unfaithfulness
 from torch_geometric.loader.dataloader import DataLoader
 
+from fidelity import *
 from dataset import Mutagenicity
 from GCN import MutagNet
 
