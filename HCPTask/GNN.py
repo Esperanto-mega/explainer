@@ -65,7 +65,7 @@ class ResidualGNN(torch.nn.Module):
             nn.Linear((hidden // 2), num_classes),
         )
 
-    def forward(self, x, edge_index, bacth, num_graphs):
+    def forward(self, x, edge_index, batch, num_graphs):
         # x, edge_index, batch = data.x, data.edge_index, data.batch
         xs = [x]
         for conv in self.convs:
