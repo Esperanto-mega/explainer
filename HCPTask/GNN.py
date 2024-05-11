@@ -65,8 +65,8 @@ class ResidualGNN(torch.nn.Module):
             nn.Linear((hidden // 2), num_classes),
         )
 
-    def forward(self, data):
-        x, edge_index, batch = data.x, data.edge_index, data.batch
+    def forward(self, x, edge_index, bacth, num_graphs):
+        # x, edge_index, batch = data.x, data.edge_index, data.batch
         xs = [x]
         for conv in self.convs:
             xs += [conv(xs[-1], edge_index).tanh()]
@@ -77,12 +77,12 @@ class ResidualGNN(torch.nn.Module):
                 x = torch.stack([t.triu().flatten()[t.triu().flatten().nonzero(as_tuple = True)] for t in xx])
                 x = self.bn(x)
             else:
-                xx = self.aggr(xx,batch)
+                xx = self.aggr(xx, batch)
                 h.append(xx)
         
         h = torch.cat(h, dim = 1)
         h = self.bnh(h)
-        x = torch.cat((x,h), dim = 1)
+        x = torch.cat((x, h), dim = 1)
         x = self.mlp(x)
         return x
         # return log_softmax(x)
