@@ -43,7 +43,7 @@ parser.add_argument("--data_path", type = str, default = '/datain/v-yinju/GNN-Ex
 parser.add_argument("--data_name", type = str, default = 'HCPTask', help = "Dataset name")
 parser.add_argument("--device", type = str, default = 'cuda:0', help = "")
 parser.add_argument("--model_path", type = str, default = '', help = "Model to be explained")
-parser.add_argument("--exp_ratio", type = float, default = 0.1, help = "Ratio of explained data samples")
+parser.add_argument("--exp_ratio", type = float, default = 0.2, help = "Ratio of explained data samples")
 parser.add_argument("--repeat", type = int, default = 10, help = "Times to repeat")
 
 parser.add_argument("--explanation_type", type = str, default = 'model')
@@ -56,7 +56,7 @@ parser.add_argument("--edge_mask_type", type = str, default = 'object')
 # "common_attributes": Will mask each edge feature.
 # "attributes": Will mask each feature across all edges.
 
-parser.add_argument("--model_mode", type = str, default = 'binary_classification')
+parser.add_argument("--model_mode", type = str, default = 'multiclass_classification')
 # "binary_classification": A binary classification model.
 # "multiclass_classification": A multiclass classification model.
 # "regression": A regression model.
@@ -86,14 +86,14 @@ testset = dataset[index[:exp_ids]]
 test_loader = DataLoader(testset, batch_size = 1, shuffle = False)
 
 label_dis = label_distribution(testset)
-print('label_dis:', label_dic)
+print('label_dis:', label_dis)
 
 # GNN model to be explained
 ckpt = torch.load(args.model_path)
 model_args, model_state_dict = ckpt['args'], ckpt['state_dict']
 explained_model = ResidualGNN(
-    trainset.num_features, 
-    trainset.num_classes, 
+    testset.num_features, 
+    testset.num_classes, 
     model_args.hidden_gnn, 
     model_args.hidden_mlp, 
     model_args.num_layers
