@@ -94,14 +94,17 @@ def fidelity(
         explain_y_hat = explain_y_hat[explanation.index]
         complement_y_hat = complement_y_hat[explanation.index]
 
-    if explainer.explanation_type == ExplanationType.model:
-        pos_fidelity = 1. - (complement_y_hat == y_hat).float().mean()
-        neg_fidelity = 1. - (explain_y_hat == y_hat).float().mean()
-    else:
-        pos_fidelity = ((y_hat == y).float() -
-                        (complement_y_hat == y).float()).abs().mean()
-        neg_fidelity = ((y_hat == y).float() -
-                        (explain_y_hat == y).float()).abs().mean()
+    pos_fidelity = 1. - (complement_y_hat == y_hat).float().mean()
+    neg_fidelity = 1. - (explain_y_hat == y_hat).float().mean()
+
+    # if explainer.explanation_type == ExplanationType.model:
+    #     pos_fidelity = 1. - (complement_y_hat == y_hat).float().mean()
+    #     neg_fidelity = 1. - (explain_y_hat == y_hat).float().mean()
+    # else:
+    #     pos_fidelity = ((y_hat == y).float() -
+    #                     (complement_y_hat == y).float()).abs().mean()
+    #     neg_fidelity = ((y_hat == y).float() -
+    #                     (explain_y_hat == y).float()).abs().mean()
 
     return float(pos_fidelity), float(neg_fidelity)
 
