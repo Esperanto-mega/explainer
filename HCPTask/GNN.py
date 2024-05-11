@@ -73,7 +73,7 @@ class ResidualGNN(torch.nn.Module):
         h = []
         for i, xx in enumerate(xs):
             if i== 0:
-                xx = xx.reshape(data.num_graphs, x.shape[1],-1)
+                xx = xx.reshape(num_graphs, x.shape[1],-1)
                 x = torch.stack([t.triu().flatten()[t.triu().flatten().nonzero(as_tuple = True)] for t in xx])
                 x = self.bn(x)
             else:
