@@ -45,8 +45,8 @@ class ResidualGNN(torch.nn.Module):
         #         for i in range(0, num_layers - 1):
         #             self.convs.append(GNN(hidden_channels, hidden_channels))
         
-        input_dim1 = int(((num_features * num_features) / 2)- (num_features / 2) + (hidden_channels * num_layers))
-        input_dim = int(((num_features * num_features) / 2)- (num_features / 2))
+        input_dim1 = int(((num_features * num_features) / 2) - (num_features / 2) + (hidden_channels * num_layers))
+        input_dim = int(((num_features * num_features) / 2) - (num_features / 2))
         self.bn = nn.BatchNorm1d(input_dim)
         self.bnh = nn.BatchNorm1d(hidden_channels * num_layers)
         self.mlp = nn.Sequential(
