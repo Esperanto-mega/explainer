@@ -71,7 +71,7 @@ def train(train_loader):
     for data in train_loader:
         optimizer.zero_grad()
         data = data.to(args.device)
-        out = model(data)
+        out = model(data.x, data.edge_index, data.batch, data.num_graphs)
         loss = loss_fn(out, data.y)
         total_loss += loss
         loss.backward()
@@ -85,7 +85,7 @@ def test(loader):
     correct = 0
     for data in loader:  
         data = data.to(args.device)
-        out = model(data)  
+        out = model(data.x, data.edge_index, data.batch, data.num_graphs)  
         pred = out.argmax(dim = 1)  
         correct += int((pred == data.y).sum())
     return correct / len(loader.dataset)
@@ -110,14 +110,15 @@ for epoch in range(args.epochs):
 # Evaluation
 ckpt = torch.load(args.model_path)
 model_args, model_state_dict = ckpt['args'], ckpt['state_dict']
-eval_model = ResidualGNN(
+model = ResidualGNN(
     trainset.num_features, 
     trainset.num_classes, 
     model_args.hidden_gnn, 
     model_args.hidden_mlp, 
     model_args.num_layers
 )
-eval_model = eval_model.to(device)
-eval_model.eval()
+model.load_state_dict(model_state_dict)
+model = model.to(device)
+model.eval()
 test_acc = test(test_loader)
 print("test_acc:{}".format(np.round(test_acc, 8)))
