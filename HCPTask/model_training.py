@@ -50,9 +50,9 @@ random.shuffle(index)
 train_ids = round(args.train_ratio * len(dataset))
 valid_ids = round((args.train_ratio + args.valid_ratio) * len(dataset))
 trainset, validset, testset = dataset[index[:train_ids]], dataset[index[train_ids:valid_ids]], dataset[index[valid_ids:]]
-trainloader = DataLoader(trainset, batch_size = args.batch_size, shuffle = True)
-validloader = DataLoader(validset, batch_size = args.batch_size, shuffle = False)
-testloader = DataLoader(testset, batch_size = 1, shuffle = False)
+train_loader = DataLoader(trainset, batch_size = args.batch_size, shuffle = True)
+val_loader = DataLoader(validset, batch_size = args.batch_size, shuffle = False)
+test_loader = DataLoader(testset, batch_size = 1, shuffle = False)
 
 # Model
 model = ResidualGNN(trainset.num_features, trainset.num_classes, args.hidden_gnn, args.hidden_mlp, args.num_layers)
@@ -72,7 +72,7 @@ def train(train_loader):
         optimizer.zero_grad()
         data = data.to(args.device)
         out = model(data)
-        loss = criterion(out, data.y) 
+        loss = loss_fn(out, data.y)
         total_loss += loss
         loss.backward()
         optimizer.step() 
@@ -95,7 +95,7 @@ for epoch in range(args.epochs):
     loss = train(train_loader)
     val_acc = test(val_loader)
     test_acc = test(test_loader)
-    print("epoch: {}, loss: {}, val_acc:{}, test_acc:{}".format(epoch, np.round(loss.item(), 6), np.round(val_acc, 2), np.round(test_acc, 2)))
+    print("epoch: {}, loss: {}, val_acc:{}, test_acc:{}".format(epoch, np.round(loss.item(), 8), np.round(val_acc, 8), np.round(test_acc, 8)))
     
     if val_acc > best_val_acc:
         best_val_acc = val_acc
@@ -120,4 +120,4 @@ eval_model = ResidualGNN(
 eval_model = eval_model.to(device)
 eval_model.eval()
 test_acc = test(test_loader)
-print("test_acc:{}".format(np.round(test_acc, 2)))
+print("test_acc:{}".format(np.round(test_acc, 8)))
