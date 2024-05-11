@@ -21,7 +21,7 @@ def fix_seed(seed):
         torch.backends.cudnn.benchmark = False
 
 class ResidualGNN(torch.nn.Module):
-    def __init__(self,, num_features, num_classes, hidden_channels = 32, hidden = 64, num_layers = 3, k = 0.6):
+    def __init__(self, num_features, num_classes, hidden_channels = 32, hidden = 64, num_layers = 3, k = 0.6):
         super().__init__()
         self.convs = ModuleList()
         self.aggr = aggr.MeanAggregation()
