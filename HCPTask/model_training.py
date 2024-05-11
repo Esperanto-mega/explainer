@@ -65,7 +65,7 @@ optimizer = Adam(model.parameters(), lr = args.lr, weight_decay = args.weight_de
 loss_fn = torch.nn.CrossEntropyLoss()
 
 # Train function
-def train(train_loader):
+def train(model, train_loader):
     model.train()
     total_loss = 0
     for data in train_loader:
@@ -80,7 +80,7 @@ def train(train_loader):
 
 # Evaluate function
 @torch.no_grad()
-def test(loader):
+def test(model, loader):
     model.eval()
     correct = 0
     for data in loader:  
@@ -92,9 +92,9 @@ def test(loader):
 
 best_val_acc = 0.0
 for epoch in range(args.epochs):
-    loss = train(train_loader)
-    val_acc = test(val_loader)
-    test_acc = test(test_loader)
+    loss = train(model, train_loader)
+    val_acc = test(model, val_loader)
+    test_acc = test(model, test_loader)
     print("epoch: {}, loss: {}, val_acc:{}, test_acc:{}".format(epoch, np.round(loss.item(), 8), np.round(val_acc, 8), np.round(test_acc, 8)))
     
     if val_acc > best_val_acc:
@@ -110,15 +110,15 @@ for epoch in range(args.epochs):
 # Evaluation
 ckpt = torch.load(args.model_path)
 model_args, model_state_dict = ckpt['args'], ckpt['state_dict']
-model = ResidualGNN(
+eval_model = ResidualGNN(
     trainset.num_features, 
     trainset.num_classes, 
     model_args.hidden_gnn, 
     model_args.hidden_mlp, 
     model_args.num_layers
 )
-model.load_state_dict(model_state_dict)
-model = model.to(device)
-model.eval()
-test_acc = test(test_loader)
+eval_model.load_state_dict(model_state_dict)
+eval_model = eval_model.to(device)
+eval_model.eval()
+test_acc = test(eval_model, test_loader)
 print("test_acc:{}".format(np.round(test_acc, 8)))
