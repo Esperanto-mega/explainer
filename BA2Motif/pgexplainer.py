@@ -9,11 +9,11 @@ import torch
 from torch_geometric.nn import GCNConv
 from torch_geometric.datasets import BA2MotifDataset
 from torch_geometric.explain import Explainer
-# from torch_geometric.explain import PGExplainer
-from Algorithm.PGExplainer import PGExplainer
-from torch_geometric.explain.metric import fidelity, unfaithfulness
+from torch_geometric.explain import PGExplainer
+from torch_geometric.explain.metric import unfaithfulness
 from torch_geometric.loader.dataloader import DataLoader
 
+from fidelity import *
 from GCN import GraphGCN
 
 def set_seed(seed):
