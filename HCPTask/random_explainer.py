@@ -6,9 +6,10 @@ import numpy as np
 import torch
 from torch_geometric.datasets import NeuroGraphDataset
 from torch_geometric.explain import Explainer, DummyExplainer
-from torch_geometric.explain.metric import fidelity, unfaithfulness
+from torch_geometric.explain.metric import unfaithfulness
 from torch_geometric.loader.dataloader import DataLoader
 
+from fidelity import *
 from GNN import ResidualGNN
 
 def set_seed(seed):
